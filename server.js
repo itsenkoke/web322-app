@@ -6,7 +6,7 @@ const storeService = require('./store-service');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static('public'));
 
 // parse these files to js object
 const items = JSON.parse(fs.readFileSync('./data/items.json', 'utf8'));
