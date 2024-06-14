@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-let item = [];
+let items = [];
 let categories = [];
 
 function initialize(){
