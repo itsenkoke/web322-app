@@ -1,7 +1,7 @@
-const storeService = require('./store-service');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const storeService = require('./store-service');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/about', (req, res) => {
-    res.redirect('/about'); // must return the about.html file from the views folder
+    res.sendFile(path.join(__dirname, 'views', 'about.html')); // must return the about.html file from the views folder
 });
 
 // set a route called /shop, activate when user call
@@ -53,6 +53,7 @@ app.get('/categories', (req, res) => {
     });
 });
 
+// default route setting
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
 });
