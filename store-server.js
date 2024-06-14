@@ -15,7 +15,7 @@ function initialize(){
 
             fulfilled();
         }catch (err){
-            rejected(err);
+            rejected('Unable to load data: ' + err);
         }
     })
 }
@@ -42,7 +42,7 @@ function getCategories() {
 
 function getPublishedItems() {
     return new Promise((fulfilled, rejected) => {
-        const publishedItems = items.filter(item => item.published);
+        const publishedItems = items.filter(item => item.published === true);
         if (publishedItems.length > 0) {
             fulfilled(publishedItems);
         } else {

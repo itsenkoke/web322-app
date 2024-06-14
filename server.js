@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/about', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'about.html')); // must return the about.html file from the views folder
+    res.redirect('/about'); // must return the about.html file from the views folder
 });
 
 // set a route called /shop, activate when user call
