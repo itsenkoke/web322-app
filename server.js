@@ -1,3 +1,16 @@
+/*********************************************************************************
+*  WEB322 – Assignment 03
+*  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part 
+*  of this assignment has been copied manually or electronically from any other source 
+*  (including 3rd party web sites) or distributed to other students.
+* 
+*  Name: Huan-Cheng Ke____________ Student ID: 151635224______ Date: 2024-07-04_________
+*
+*  Vercel Web App URL: __https://vercel.com/itsenkokes-projects/web322-app______
+* 
+*  GitHub Repository URL: _https://github.com/itsenkoke/web322-app______________
+*
+********************************************************************************/ 
 const express = require('express');
 const path = require('path');
 const storeService = require('./store-server');
