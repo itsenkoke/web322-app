@@ -60,14 +60,14 @@ app.get('/items', (req, res) => {
     const { category, minDate } = req.query;
 
     if (category) {
-        storeService.getItemsByCategory(category)
+        storeService.getItemsByCategory(category) // if category exist, print out the result
             .then(items => {
                 res.json(items);
             })
             .catch(err => {
                 res.status(500).json({ message: err });
             });
-    } else if (minDate) {
+    } else if (minDate) { // if the date exist, print out the result
         storeService.getItemsByMinDate(minDate)
             .then(items => {
                 res.json(items);
@@ -75,7 +75,7 @@ app.get('/items', (req, res) => {
             .catch(err => {
                 res.status(500).json({ message: err });
             });
-    } else {
+    } else { // otherwise print out all the items
         storeService.getAllItems()
             .then(items => {
                 res.json(items);
@@ -86,7 +86,7 @@ app.get('/items', (req, res) => {
     }
 });
 
-app.get('/item/:id', (req, res) => {
+app.get('/item/:id', (req, res) => { // add semicolon to do the dynamic parameter, otherwise we cannot search by ID
     storeService.getItemById(req.params.id)
         .then(item => {
             res.json(item);
@@ -110,7 +110,7 @@ app.post('/items/add', upload.single("itemImage"), (req, res) => {
     console.log("Received request to add item");
 
     if(req.file){
-        console.log("File received:", req.file);
+        console.log("File received:", req.file); // check if the file received
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
                 let stream = cloudinary.uploader.upload_stream(
@@ -149,7 +149,7 @@ app.post('/items/add', upload.single("itemImage"), (req, res) => {
     }
 
     function processItem(imageUrl){
-        const itemData = {
+        const itemData = { // control the order of these infos
             id: items.length + 1,
             category: parseInt(req.body.category),// confirm the price will be double
             postDate: req.body.postDate,
@@ -163,7 +163,7 @@ app.post('/items/add', upload.single("itemImage"), (req, res) => {
         // Call the addItem function here
         addItem(itemData).then((item) => {
             console.log("Added Item:", item);
-            res.redirect('/items');
+            res.redirect('/items'); // response with redirection
         }).catch((err) => {
             console.error("Error adding item:", err);
             res.status(500).send(err);
