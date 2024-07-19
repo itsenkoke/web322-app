@@ -225,7 +225,7 @@ app.post('/items/add', upload.single("itemImage"), (req, res) => {
     }
 });
 
-storeService.initialize()
+itemData.initialize()
     .then(() => {
         app.listen(PORT, () => {
             console.log(`Express http server listening on port ${PORT}`);
