@@ -4,7 +4,7 @@
 *  of this assignment has been copied manually or electronically from any other source 
 *  (including 3rd party web sites) or distributed to other students.
 * 
-*  Name: Huan-Cheng Ke____________ Student ID: 151635224______ Date: 2024-07-04_________
+*  Name: Huan-Cheng Ke____________ Student ID: 151635224______ Date: 2024-07-16_________
 *
 *  Vercel Web App URL: __https://vercel.com/itsenkokes-projects/web322-app______
 * 
@@ -13,11 +13,11 @@
 ********************************************************************************/ 
 const express = require('express');
 const path = require('path');
-const storeService = require('./store-server');
+const itemData = require('./store-server');
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
-const { addItem, items } = require('./store-server');
+const exphbs = require('express-handlebars');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -32,85 +32,148 @@ cloudinary.config({
 const upload = multer();
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(function(req, res, next) {
+    let route = req.path.substring(1);
+    app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
+    app.locals.viewingCategory = req.query.category;
+    next();
+});
+
+const handlebars = exphbs.create({
+    extname: '.hbs',
+    helpers: {
+        navLink: function(url, options) {
+            return '<li class="nav-item">' +
+                '<a class="nav-link' + ((url == app.locals.activeRoute) ? ' active' : '') + '" href="' + url + '">' +
+                options.fn(this) + '</a></li>';
+        },
+        equal: function(lvalue, rvalue, options) {
+            if (arguments.length < 3)
+                throw new Error("Handlebars Helper equal needs 2 parameters");
+            if (lvalue != rvalue) {
+                return options.inverse(this);
+            } else {
+                return options.fn(this);
+            }
+        },
+        safeHTML: function(context) {
+            return new handlebars.handlebars.SafeString(context);
+        }
+    }
+});
+
+app.engine('.hbs', handlebars.engine);
+app.set('view engine', '.hbs');
 
 app.get('/', (req, res) => {
-    res.redirect('/about'); // redirect the user to the /about route
+    res.redirect('/shop'); // redirect the user to the /shop route
+});
+
+app.get('/shop', async (req, res) => {
+    let viewData = {};
+
+    try {
+        let items = [];
+        if (req.query.category) {
+            items = await itemData.getPublishedItemsByCategory(req.query.category);
+        } else {
+            items = await itemData.getPublishedItems();
+        }
+
+        items.sort((a, b) => new Date(b.itemDate) - new Date(a.itemDate));
+        let item = items[0];
+
+        viewData.items = items;
+        viewData.item = item;
+    } catch (err) {
+        viewData.message = "no results";
+    }
+
+    try {
+        let categories = await itemData.getCategories();
+        viewData.categories = categories;
+    } catch (err) {
+        viewData.categoriesMessage = "no results";
+    }
+
+    res.render("shop", { data: viewData });
+});
+
+app.get('/shop/:id', async (req, res) => {
+    let viewData = {};
+
+    try {
+        let items = [];
+        if (req.query.category) {
+            items = await itemData.getPublishedItemsByCategory(req.query.category);
+        } else {
+            items = await itemData.getPublishedItems();
+        }
+
+        items.sort((a, b) => new Date(b.itemDate) - new Date(a.itemDate));
+        viewData.items = items;
+    } catch (err) {
+        viewData.message = "no results";
+    }
+
+    try {
+        viewData.item = await itemData.getItemById(req.params.id);
+    } catch (err) {
+        viewData.message = "no results";
+    }
+
+    try {
+        let categories = await itemData.getCategories();
+        viewData.categories = categories;
+    } catch (err) {
+        viewData.categoriesMessage = "no results";
+    }
+
+    res.render("shop", { data: viewData });
 });
 
 app.get('/about', (req, res) => {
-    res.sendFile(path.join(__dirname + '/views/about.html')); // must return the about.html file from the views folder
+    res.render('about');
 });
 
 app.get('/items/add', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'addItem.html'));
-});
-
-// set a route called /shop, activate when user call
-app.get('/shop', (req, res) => {
-    storeService.getPublishedItems()
-    .then(publishedItems => {
-        res.json(publishedItems);
-    })
-    .catch(err => {
-        res.status(500).json({ message: err });
-    });
+    res.render('addItem');
 });
 
 app.get('/items', (req, res) => {
     const { category, minDate } = req.query;
 
     if (category) {
-        storeService.getItemsByCategory(category) // if category exist, print out the result
+        itemData.getItemsByCategory(category)
             .then(items => {
-                res.json(items);
+                res.render('items', { items });
             })
             .catch(err => {
-                res.status(500).json({ message: err });
+                res.render('items', { message: "no results" });
             });
-    } else if (minDate) { // if the date exist, print out the result
-        storeService.getItemsByMinDate(minDate)
+    } else if (minDate) {
+        itemData.getItemsByMinDate(minDate)
             .then(items => {
-                res.json(items);
+                res.render('items', { items });
             })
             .catch(err => {
-                res.status(500).json({ message: err });
+                res.render('items', { message: "no results" });
             });
-    } else { // otherwise print out all the items
-        storeService.getAllItems()
+    } else {
+        itemData.getAllItems()
             .then(items => {
-                res.json(items);
+                res.render('items', { items });
             })
             .catch(err => {
-                res.status(500).json({ message: err });
+                res.render('items', { message: "no results" });
             });
     }
 });
 
-app.get('/item/:id', (req, res) => { // add semicolon to do the dynamic parameter, otherwise we cannot search by ID
-    storeService.getItemById(req.params.id)
-        .then(item => {
-            res.json(item);
-        })
-        .catch(err => {
-            res.status(500).json({ message: err });
-        });
-});
-
-app.get('/categories', (req, res) => {
-    storeService.getCategories()
-    .then(categories => {
-        res.json(categories); // send data to the client
-    })
-    .catch(err => {
-        res.status(500).json({ message: err });
-    });
-});
-
 app.post('/items/add', upload.single("itemImage"), (req, res) => {
-    console.log("Received request to add item");
-
     if(req.file){
-        console.log("File received:", req.file); // check if the file received
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
                 let stream = cloudinary.uploader.upload_stream(
@@ -127,20 +190,13 @@ app.post('/items/add', upload.single("itemImage"), (req, res) => {
         };
 
         async function upload(req) {
-            try {
-                let result = await streamUpload(req);
-                console.log("Uploaded to Cloudinary:", result); // so I can easily know if upload successfully or not
-                return result;
-            }
-            catch(error){
-                console.error("Error uploading to Cloudinary:", error);
-                throw error;
-            }
+            let result = await streamUpload(req);
+            return result;
         }
 
-        upload(req).then(((uploaded)=>{
+        upload(req).then((uploaded) => {
             processItem(uploaded.url);
-        })).catch((error) => {
+        }).catch((error) => {
             console.error("Error during upload:", error);
             res.status(500).send(error);
         });
@@ -149,21 +205,19 @@ app.post('/items/add', upload.single("itemImage"), (req, res) => {
     }
 
     function processItem(imageUrl){
-        const itemData = { // control the order of these infos
+        const itemData = {
             id: items.length + 1,
-            category: parseInt(req.body.category),// confirm the price will be double
+            category: parseInt(req.body.category),
             postDate: req.body.postDate,
             featureImage: imageUrl,
-            price: parseFloat(req.body.price),// convert the categories to number
+            price: parseFloat(req.body.price),
             title: req.body.title,
             body: req.body.body,
             published: req.body.published === 'true'
         };
 
-        // Call the addItem function here
         addItem(itemData).then((item) => {
-            console.log("Added Item:", item);
-            res.redirect('/items'); // response with redirection
+            res.redirect('/items');
         }).catch((err) => {
             console.error("Error adding item:", err);
             res.status(500).send(err);
@@ -171,11 +225,10 @@ app.post('/items/add', upload.single("itemImage"), (req, res) => {
     }
 });
 
-// initialize storeService and start the server
 storeService.initialize()
     .then(() => {
         app.listen(PORT, () => {
-            console.log(`Express http server listening on port ${PORT}`); // output port to the console
+            console.log(`Express http server listening on port ${PORT}`);
         });
     })
     .catch(err => {

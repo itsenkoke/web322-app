@@ -7,14 +7,16 @@ let categories = [];
 function addItem(itemData) {
     itemData.id = items.length + 1;
     return new Promise((resolve, reject) => {
-        if (itemData.published === undefined) {
-            itemData.published = false;
+        if (!itemData.title || !itemData.body || !itemData.category || !itemData.price) {
+            reject("All fields are required");
         } else {
-            itemData.published = true;
-        }
+            itemData.id = items.length + 1;
+            itemData.published = (itemData.published === 'true');
+            itemData.itemDate = new Date().toISOString().split('T')[0];
 
-        items.push(itemData);
-        resolve(itemData);
+            items.push(itemData);
+            resolve(itemData);
+        }
     });
 }
 
@@ -98,6 +100,17 @@ function getItemById(id) { // instruction required function
     });
 }
 
+function getPublishedItemsByCategory(category) {
+    return new Promise((resolve, reject) => {
+        const publishedItems = items.filter(item => item.published === true && item.category == category);
+        if (publishedItems.length > 0) {
+            resolve(publishedItems);
+        } else {
+            reject("No published items found for category: " + category);
+        }
+    });
+}
+
 module.exports = {
     initialize,
     getAllItems,
@@ -107,5 +120,6 @@ module.exports = {
     getItemsByCategory,
     getItemsByMinDate,
     getItemById,
-    items
+    items,
+    getPublishedItemsByCategory
 };

@@ -1,0 +1,45 @@
+            <div class="row">
+                <aside class="col-md-3">
+                    <h2>Add Item</h2>
+                    <p>Use the form below to add a new item to the shop.</p>
+                </aside>
+                <section class="main col-md-9">
+                    <article>
+                        <h2>Add a New Item</h2>
+                        <form action="/items/add" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="postDate" class="form-label">Post Date</label>
+                                <input type="date" class="form-control" id="postDate" name="postDate" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price</label>
+                                <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option selected disabled value="">Choose...</option>
+                                    <option value="1">Home, Garden</option>
+                                    <option value="2">Electronics, Computers, Video Games</option>
+                                    <option value="3">Clothing</option>
+                                    <option value="4">Sports & Outdoors</option>
+                                    <option value="5">Pets</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="itemImage" class="form-label">Item Image</label>
+                                <input class="form-control" type="file" id="itemImage" name="itemImage">
+                            </div>
+                            <div class="mb-3">
+                                <label for="body" class="form-label">Briefly Description</label>
+                                <textarea class="form-control" id="body" name="body" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Item</button>
+                        </form>
+                    </article>
+                </section>
+            </div>
