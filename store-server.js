@@ -1,115 +1,31 @@
-const fs = require('fs');
-const path = require('path');
+const Sequelize = require('sequelize');
+var sequelize = new Sequelize('neondb01', 'neondb01_owner', 'Hd8oXgOCiaD5', {
+    host: 'ep-fragrant-dream-a5qhb9ns.us-east-2.aws.neon.tech',
+    dialect: 'postgres',
+    port: 5432,
+    dialectOptions: {
+        ssl: { rejectUnauthorized: false }
+    },
+    query: { raw: true }
+});
 
-let items = [];
-let categories = [];
+// declare Item module
+const Item = sequelize.define('Item', {
+    body: Sequelize.TEXT,
+    title: Sequelize.STRING,
+    itemDate: Sequelize.DATE,
+    featureImage: Sequelize.STRING,
+    published: Sequelize.BOOLEAN,
+    price: Sequelize.DOUBLE
+});
 
-function addItem(itemData) {
-    itemData.id = items.length + 1;
-    return new Promise((resolve, reject) => {
-        if (!itemData.title || !itemData.body || !itemData.category || !itemData.price) {
-            reject("All fields are required");
-        } else {
-            itemData.id = items.length + 1;
-            itemData.published = (itemData.published === 'true');
-            itemData.itemDate = new Date().toISOString().split('T')[0];
+// declare Category module
+const Category = sequelize.define('Category', {
+    category: Sequelize.STRING
+});
 
-            items.push(itemData);
-            resolve(itemData);
-        }
-    });
-}
-
-function initialize(){
-    return new Promise((fulfilled, rejected) => {
-        try {
-            const itemData = fs.readFileSync(path.join(__dirname, 'data', 'items.json'), 'utf8');
-            items = JSON.parse(itemData);
-
-            const categoriesData = fs.readFileSync(path.join(__dirname, 'data', 'categories.json'), 'utf8');
-            categories = JSON.parse(categoriesData);
-
-            fulfilled();
-        }catch (err){
-            rejected('Unable to load data: ' + err);
-        }
-    })
-}
-
-function getAllItems() {
-    return new Promise((fulfilled, rejected) => {
-        if (items.length > 0) {
-            fulfilled(items);
-        } else {
-            rejected("No items found");
-        }
-    });
-}
-
-function getCategories() {
-    return new Promise((fulfilled, rejected) => {
-        if (categories.length > 0) {
-            fulfilled(categories);
-        } else {
-            rejected("No categories found");
-        }
-    });
-}
-
-function getPublishedItems() {
-    return new Promise((fulfilled, rejected) => {
-        const publishedItems = items.filter(item => item.published === true);
-        if (publishedItems.length > 0) {
-            fulfilled(publishedItems);
-        } else {
-            rejected("No published items found");
-        }
-    });
-}
-
-function getItemsByCategory(category) { // part 3,4 instruction required function
-    return new Promise((fulfilled, rejected) => {
-        const filteredItems = items.filter(item => item.category === parseInt(category));
-        if (filteredItems.length > 0) {
-            fulfilled(filteredItems);
-        } else {
-            rejected(`No items found for category ${category}`);
-        }
-    });
-}
-
-function getItemsByMinDate(minDateStr) { // instruction required function
-    return new Promise((fulfilled, rejected) => {
-        const filteredItems = items.filter(item => new Date(item.postDate) >= new Date(minDateStr));
-        if (filteredItems.length > 0) {
-            fulfilled(filteredItems);
-        } else {
-            rejected(`No items found from date ${minDateStr}`);
-        }
-    });
-}
-
-function getItemById(id) { // instruction required function
-    return new Promise((fulfilled, rejected) => {
-        const item = items.find(item => item.id === parseInt(id));
-        if (item) {
-            fulfilled(item);
-        } else {
-            rejected(`No item found with id ${id}`);
-        }
-    });
-}
-
-function getPublishedItemsByCategory(category) {
-    return new Promise((resolve, reject) => {
-        const publishedItems = items.filter(item => item.published === true && item.category == category);
-        if (publishedItems.length > 0) {
-            resolve(publishedItems);
-        } else {
-            reject("No published items found for category: " + category);
-        }
-    });
-}
+// set the relationship
+Item.belongsTo(Category, {foreignKey: 'category'});
 
 module.exports = {
     initialize,
@@ -120,6 +36,123 @@ module.exports = {
     getItemsByCategory,
     getItemsByMinDate,
     getItemById,
-    items,
-    getPublishedItemsByCategory
+    getPublishedItemsByCategory,
+    addCategory,
+    deleteCategoryById,
+    deleteItemById
 };
+
+function initialize() {
+    return new Promise((resolve, reject) => {
+        sequelize.sync()
+            .then(() => resolve())
+            .catch(err => reject("unable to sync the database: " + err));
+    });
+}
+
+function getAllItems() {
+    return new Promise((resolve, reject) => {
+        Item.findAll()
+            .then(data => resolve(data))
+            .catch(err => reject("no results returned: " + err));
+    });
+}
+
+function getCategories() {
+    return new Promise((resolve, reject) => {
+        Category.findAll()
+            .then(data => resolve(data))
+            .catch(err => reject("no results returned: " + err));
+    });
+}
+
+function getPublishedItems() {
+    return new Promise((resolve, reject) => {
+        Item.findAll({ where: { published: true } })
+            .then(data => resolve(data))
+            .catch(err => reject("no results returned: " + err));
+    });
+}
+
+function addItem(itemData) {
+    return new Promise((resolve, reject) => {
+        itemData.published = (itemData.published) ? true : false;
+        for (let prop in itemData) {
+            if (itemData[prop] === "") itemData[prop] = null;
+        }
+        itemData.itemDate = new Date();
+
+        Item.create(itemData)
+            .then(() => resolve())
+            .catch(err => reject("unable to create item: " + err));
+    });
+}
+
+function getItemsByCategory(category) {
+    return new Promise((resolve, reject) => {
+        Item.findAll({ where: { category: category } })
+            .then(data => resolve(data))
+            .catch(err => reject("no results returned: " + err));
+    });
+}
+
+function getItemsByMinDate(minDateStr) {
+    const { gte } = Sequelize.Op;
+    return new Promise((resolve, reject) => {
+        Item.findAll({
+            where: {
+                itemDate: {
+                    [gte]: new Date(minDateStr)
+                }
+            }
+        })
+            .then(data => resolve(data))
+            .catch(err => reject("no results returned: " + err));
+    });
+}
+
+function getItemById(id) {
+    return new Promise((resolve, reject) => {
+        Item.findAll({ where: { id: id } })
+            .then(data => resolve(data[0]))
+            .catch(err => reject("no results returned: " + err));
+    });
+}
+
+function getPublishedItemsByCategory(category) {
+    return new Promise((resolve, reject) => {
+        Item.findAll({ where: { published: true, category: category } })
+            .then(data => resolve(data))
+            .catch(err => reject("no results returned: " + err));
+    });
+}
+
+function addCategory(categoryData) {
+    return new Promise((resolve, reject) => {
+        for (let prop in categoryData) {
+            if (categoryData[prop] === "") categoryData[prop] = null;
+        }
+
+        Category.create(categoryData)
+            .then(() => resolve())
+            .catch(err => reject("unable to create category: " + err));
+    });
+}
+
+// delete categories by id
+function deleteCategoryById(id) {
+    return new Promise((resolve, reject) => {
+        Category.destroy({ where: { id: id } })
+            .then(() => resolve())
+            .catch(err => reject("unable to delete category: " + err));
+    });
+}
+
+// delete item by id
+function deleteItemById(id) {
+    return new Promise((resolve, reject) => {
+        Item.destroy({ where: { id: id } })
+            .then(() => resolve())
+            .catch(err => reject("unable to delete item: " + err));
+    });
+}

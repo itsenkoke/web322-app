@@ -1,4 +1,4 @@
-            <div class="row">
+            {{!-- <div class="row">
                 <aside class="col-md-3">
                     <h2>About</h2>
                     <p>I love creating Vlogs to capture moments of my life and I'm passionate about fitness and staying active. During my time in Canada, I'm exploring new things and enjoying the vibrant cultural experiences.</p>
@@ -33,4 +33,51 @@
                         </p>
                     </article>
                 </section>
+            </div> --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Add New Item</h1>
+        <form action="/items/add" method="post">
+            <!-- 其他表單字段 -->
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" class="form-control" name="title" id="title" required>
             </div>
+            <div class="form-group">
+                <label for="body">Body</label>
+                <textarea class="form-control" name="body" id="body" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="price">Price</label>
+                <input type="number" step="0.01" class="form-control" name="price" id="price" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                {{#if categories}}
+                <select class="form-control" name="category" id="category">
+                    <option value="">Select Category</option>
+                    {{#each categories}}
+                    <option value="{{id}}">{{category}}</option>
+                    {{/each}}
+                </select>
+                {{else}}
+                <div>No Categories</div>
+                {{/if}}
+            </div>
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" name="published" id="published">
+                <label class="form-check-label" for="published">Published</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Item</button>
+        </form>
+    </div>
+</body>
+</html>
