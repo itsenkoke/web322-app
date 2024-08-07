@@ -19,6 +19,8 @@ const itemData = require('./store-server');
 const app = express();
 const authData = require('./auth-service');
 const clientSessions = require("client-sessions");
+const cors = require('cors');
+app.use(cors());
 
 const PORT = process.env.PORT || 8080;
 
