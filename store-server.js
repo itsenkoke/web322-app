@@ -1,13 +1,12 @@
 const { Sequelize } = require('sequelize');
-const sequelize = new Sequelize(process.env.MONGO_URI, {
-  dialect: 'postgres',
-  protocol: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false
-    }
-  }
+const sequelize = new Sequelize('neondb01', 'neondb01_owner', 'Hd8oXgOCiaD5', {
+    host: 'ep-fragrant-dream-a5qhb9ns.us-east-2.aws.neon.tech',
+    dialect: 'postgres',
+    port: 5432,
+    dialectOptions: {
+        ssl: { rejectUnauthorized: false }
+    },
+    query: { raw: true }
 });
 
 sequelize.authenticate().then(() => {

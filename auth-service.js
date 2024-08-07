@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const Schema = mongoose.Schema;
+let Schema = mongoose.Schema;
 
 const userSchema = new Schema({
     userName: {
@@ -19,15 +19,11 @@ let User;
 
 module.exports.initialize = function () {
     return new Promise((resolve, reject) => {
-        let db = mongoose.createConnection('mongodb+srv://EnkoDB:09270927@enkoscluster.jmxuxfn.mongodb.net/', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+        let db = mongoose.createConnection(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
         db.on('error', (err) => {
             reject(err);
         });
-
         db.once('open', () => {
             User = db.model("users", userSchema);
             resolve();
