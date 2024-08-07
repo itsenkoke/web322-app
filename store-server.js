@@ -1,13 +1,20 @@
-const Sequelize = require('sequelize');
-var sequelize = new Sequelize('neondb01', 'neondb01_owner', 'Hd8oXgOCiaD5', {
-    host: 'ep-fragrant-dream-a5qhb9ns.us-east-2.aws.neon.tech',
-    dialect: 'postgres',
-    port: 5432,
-    dialectOptions: {
-        ssl: { rejectUnauthorized: false }
-    },
-    query: { raw: true }
+const { Sequelize } = require('sequelize');
+const sequelize = new Sequelize(process.env.MONGO_URI, {
+  dialect: 'postgres',
+  protocol: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  }
 });
+
+sequelize.authenticate().then(() => {
+    console.log('Connection has been established successfully.');
+  }).catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
 
 // declare Item module
 const Item = sequelize.define('Item', {
