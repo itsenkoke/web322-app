@@ -1,5 +1,5 @@
 /*********************************************************************************
-*  WEB322 – Assignment 05
+*  WEB322 – Assignment 06
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part 
 *  of this assignment has been copied manually or electronically from any other source 
 *  (including 3rd party web sites) or distributed to other students.
@@ -47,7 +47,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(clientSessions({
     cookieName: "session",
-    secret: "someSecretKey",
+    secret: "Woa^b?>ei(&AdKH",
     duration: 24 * 60 * 60 * 1000,
     activeDuration: 1000 * 60 * 5
 }));
