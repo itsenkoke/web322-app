@@ -5,9 +5,62 @@ body {
 }
 
 .container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    margin-top: 50px;
     padding-top: 90px;
     padding-left: 15px;
     padding-right: 15px;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #007bff;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+aside {
+    flex: 1;
+    margin-right: 20px;
+    background-color: #e9ecef;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+section.main {
+    flex: 3;
+}
+
+article {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 .navbar {

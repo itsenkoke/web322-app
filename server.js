@@ -4,7 +4,7 @@
 *  of this assignment has been copied manually or electronically from any other source 
 *  (including 3rd party web sites) or distributed to other students.
 * 
-*  Name: Huan-Cheng Ke____________ Student ID: 151635224______ Date: 2024-07-29_________
+*  Name: Huan-Cheng Ke____________ Student ID: 151635224______ Date: 2024-08-04_________
 *
 *  Vercel Web App URL: __https://vercel.com/itsenkokes-projects/web322-app______
 * 
@@ -17,6 +17,8 @@ const exphbs = require('express-handlebars');
 const handlebarsLayouts = require('handlebars-layouts');
 const itemData = require('./store-server');
 const app = express();
+const authData = require('./auth-service');
+const clientSessions = require("client-sessions");
 
 const PORT = process.env.PORT || 8080;
 
@@ -43,13 +45,24 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(clientSessions({
+    cookieName: "session",
+    secret: "someSecretKey",
+    duration: 24 * 60 * 60 * 1000,
+    activeDuration: 1000 * 60 * 5
+}));
+
+app.use(function(req, res, next) {
+    res.locals.session = req.session;
+    next();
+});
 
 // Routes
 app.get('/', (req, res) => {
     res.render('home', { title: 'Home' });
 });
 
-app.get('/shop', async (req, res) => {
+app.get('/shop', ensureLogin, async (req, res) => {
     let viewData = {};
     try {
         let items = await itemData.getPublishedItems();
@@ -60,8 +73,92 @@ app.get('/shop', async (req, res) => {
     res.render("shop", { data: viewData });
 });
 
+// Define the route for /about
+app.get('/about', (req, res) => {
+    res.render('about', { title: 'About' });
+});
+
+
+app.get("/items", ensureLogin, async (req, res) => {
+    try {
+        let items = await itemData.getItems();
+        res.render('items', { items: items });
+    } catch (err) {
+        res.render('items', { message: "no results" });
+    }
+});
+
+app.get("/items/add", ensureLogin, (req, res) => {
+    res.render('addItem');
+});
+
+app.post("/items/add", ensureLogin, async (req, res) => {
+    try {
+        await itemData.addItem(req.body);
+        res.redirect('/items');
+    } catch (err) {
+        res.status(500).send("Unable to add item");
+    }
+});
+
+app.get("/login", (req, res) => {
+    res.render("login");
+});
+
+app.get("/register", (req, res) => {
+    res.render("register");
+});
+
+app.post("/register", (req, res) => {
+    authData.registerUser(req.body).then(() => {
+        res.render("register", { successMessage: "User created" });
+    }).catch((err) => {
+        res.render("register", { errorMessage: err, userName: req.body.userName });
+    });
+});
+
+app.post("/login", (req, res) => {
+    req.body.userAgent = req.get('User-Agent');
+    authData.checkUser(req.body).then((user) => {
+        req.session.user = {
+            userName: user.userName,
+            email: user.email,
+            loginHistory: user.loginHistory
+        }
+        res.redirect('/items');
+    }).catch((err) => {
+        res.render("login", { errorMessage: err, userName: req.body.userName });
+    });
+});
+
+app.get("/logout", (req, res) => {
+    req.session.reset();
+    res.redirect("/");
+});
+
+app.get("/userHistory", ensureLogin, (req, res) => {
+    res.render("userHistory");
+});
+
+function ensureLogin(req, res, next) {
+    if (!req.session.userName) {
+        res.redirect("/login");
+    } else {
+        next();
+    }
+}
+
+authData.initialize()
+    .then(() => {
+        console.log("Database connection successful");
+    })
+    .catch((err) => {
+        console.log("Database connection error: " + err);
+    });
+
 // Initialize and start server
 itemData.initialize()
+    .then(authData.initialize)
     .then(() => {
         app.listen(PORT, () => {
             console.log(`Server is listening on port ${PORT}`);
@@ -70,5 +167,6 @@ itemData.initialize()
     .catch(err => {
         console.log("Unable to start server: " + err);
     });
+
 
 module.exports = app;
